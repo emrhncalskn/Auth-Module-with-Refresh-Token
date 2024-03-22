@@ -2,12 +2,14 @@ import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common
 import { Request } from 'express';
 import { CreateUserDto } from 'src/user/dto/user.dto';
 import { AuthService } from './auth.service';
-import { PassAuth } from './decorator/pass-auth.decorator';
+import { PassAuth } from './decorators/pass-auth.decorator';
 import { AuthDto } from './dto/auth.dto';
-import { LocalAuthGuard } from './guard/local-auth.guard';
-import { RefreshTokenGuard } from './guard/refresh-token.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { PassPermission } from './decorators/pass-permission.decorator';
 
 @PassAuth()
+@PassPermission()
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
@@ -32,4 +34,5 @@ export class AuthController {
         const refreshToken = req.user['refreshToken'];
         return await this.authService.refreshTokens(userId, refreshToken);
     }
+
 }

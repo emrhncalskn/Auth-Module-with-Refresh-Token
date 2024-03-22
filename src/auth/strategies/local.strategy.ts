@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { UserService } from 'src/user/user.service';
 import { Encryptor } from '../encryptor/encryptor';
-import { AuthErrorMessage } from '../constant/error.constant';
+import { AuthErrorMessage } from '../constants/error.constant';
 
 // Kullanıcı var mı yok mu ve girdiği bilgiler doğru mu diye kontrol eden guard -- login yapacak kullanıcıyı kontrol eder
 

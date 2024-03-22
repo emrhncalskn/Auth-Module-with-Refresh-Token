@@ -1,8 +1,6 @@
 import { INestApplication, Injectable } from '@nestjs/common';
 import { Response } from 'express';
 
-const req = require('express').request
-
 @Injectable()
 export class AppService {
 
@@ -14,6 +12,4 @@ export class AppService {
     const digits = Math.floor(100000 + Math.random() * 900000)
     return res.status(200).send({ digits });
   }
-
-
 }

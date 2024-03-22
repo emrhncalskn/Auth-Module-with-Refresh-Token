@@ -1,7 +1,7 @@
 import { ExecutionContext, HttpException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { IS_ALLOWED } from '../decorator/pass-auth.decorator';
+import { IS_ALLOWED_AUTH } from '../decorators/pass-auth.decorator';
 
 // önce buraya sonra strategy'e girer
 
@@ -12,7 +12,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     canActivate(context: ExecutionContext) {
-        const isAllowed = this.reflector.getAllAndOverride<boolean>(IS_ALLOWED, [
+        const isAllowed = this.reflector.getAllAndOverride<boolean>(IS_ALLOWED_AUTH, [
             context.getHandler(),
             context.getClass(),
         ]);

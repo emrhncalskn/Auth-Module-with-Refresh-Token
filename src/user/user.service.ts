@@ -19,7 +19,7 @@ export class UserService {
     if (userExists) { throw new HttpException({ message: 'Email is already registered. Please login.' }, 400) }
     userDto.password = await this.encryptor.hashPassword(userDto.password);
     userDto.status = 0;
-    const user = this.userRepository.create(userDto);
+    const user = this.userRepository.create({ ...userDto, role_id: 1 });
     await this.userRepository.save(user);
     const { password, ...result } = user
     return result;
