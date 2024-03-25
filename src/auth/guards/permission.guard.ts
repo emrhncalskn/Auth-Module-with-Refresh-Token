@@ -52,7 +52,6 @@ export class PermissionGuard implements CanActivate {
 
         }
         catch (err) {
-            console.log(err)
             context.switchToHttp().getResponse().status(HttpStatus.BAD_REQUEST).send({ msg: err.message })
         }
     }

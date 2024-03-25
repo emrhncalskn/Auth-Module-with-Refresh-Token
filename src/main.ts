@@ -27,7 +27,7 @@ async function bootstrap() {
   console.log(`Uygulama '${await app.getUrl()}' adresinde çalışıyore.`);
   console.log(`Swagger '${await app.getUrl()}/api' adresinde çalışıyore.`);
 
-  await permissionService.createApiRoutes(app);
+  //await permissionService.createApiRoutes(app);
 
 }
 

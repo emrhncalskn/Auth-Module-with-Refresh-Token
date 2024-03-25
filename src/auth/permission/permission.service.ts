@@ -2,11 +2,14 @@ import { INestApplication } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Api } from "../entities/api.entity";
+import { Permission } from "../entities/permission.entity";
 
 export class PermissionService {
     constructor(
         @InjectRepository(Api)
-        private readonly apiRepository: Repository<Api>
+        private readonly apiRepository: Repository<Api>,
+        @InjectRepository(Permission)
+        private readonly permissionRepository: Repository<Permission>
     ) { }
 
     async createApiRoutes(app: INestApplication) {
@@ -14,11 +17,19 @@ export class PermissionService {
         const apis = JSON.parse(JSON.stringify(await this.apiRepository.find()));
         const routesToCreate = routes.filter(route => !apis.some(api => this.compareRoutes(api, route)));
         const routesToDelete = apis.filter(api => !routes.some(route => this.compareRoutes(api, route)));
-        if (routesToCreate.length > 0) {
-            console.log("++++++++++++ UYARI!! Yeni API'ler bulundu ve başarı ile veritabanına kaydedildi. ++++++++++++")
-            console.log("Yeni eklenen API'ler :: ", routesToCreate);
-            await this.apiRepository.save(routesToCreate);
+        const permissionsToDelete = [];
 
+        await Promise.all(routesToDelete.map(async (route) => {
+            const permission = await this.permissionRepository.find({ where: { api_id: route.id } });
+            if (permission.length > 0) {
+                permissionsToDelete.push(JSON.parse(JSON.stringify(permission)));
+                await this.permissionRepository.remove(permission);
+            }
+        }));
+
+        if (permissionsToDelete.length > 0) {
+            console.log("++++++++++++ UYARI!! Veritabanında bulunan fakat uygulamada bulunmayan yetkilendirmeler bulundu ve başarı ile veritabanından kaldırıldı. ++++++++++++")
+            console.log("Veritabanından kaldırılan yetkilendirmeler :: ", permissionsToDelete);
         }
 
         if (routesToDelete.length > 0) {
@@ -26,6 +37,13 @@ export class PermissionService {
             console.log("Veritabanından kaldırılan API'ler :: ", routesToDelete);
             await this.apiRepository.remove(routesToDelete);
         }
+
+        if (routesToCreate.length > 0) {
+            console.log("++++++++++++ UYARI!! Yeni API'ler bulundu ve başarı ile veritabanına kaydedildi. ++++++++++++")
+            console.log("Yeni eklenen API'ler :: ", routesToCreate);
+            await this.apiRepository.save(routesToCreate);
+        }
+
     }
 
     private extractRoutes(app: INestApplication) {
