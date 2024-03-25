@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { Role } from "./role.entity";
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Api } from "./api.entity";
+import { Role } from "./role.entity";
 
+@Index("IDX_permission_api_id_role_id", ['api_id', 'role_id'], { unique: true })
 @Entity('permission')
 export class Permission {
 

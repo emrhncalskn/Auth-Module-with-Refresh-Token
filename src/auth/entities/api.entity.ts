@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Index } from "typeorm";
 import { Permission } from "./permission.entity";
 
+@Index("IDX_api_method_path", ['path', 'method'], { unique: true })
 @Entity('api')
 export class Api {
 
