@@ -16,10 +16,11 @@ import { PermissionService } from './permission/permission.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
+import { PermissionController } from './permission/permission.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Api, Permission, Role]), UserModule, PassportModule, JwtModule.register({})],
-  controllers: [AuthController],
+  controllers: [AuthController, PermissionController],
   providers: [
     AuthService, JwtService, PermissionService, LocalStrategy, JwtStrategy, RefreshTokenStrategy, Encryptor,
     { provide: APP_GUARD, useClass: JwtAuthGuard }, { provide: APP_GUARD, useClass: PermissionGuard }

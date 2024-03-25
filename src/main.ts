@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
-import { PermissionService } from './auth/permission/permission.service';
+import { PermissionService, syncPermission } from './auth/permission/permission.service';
 
 
 async function bootstrap() {
@@ -27,7 +27,7 @@ async function bootstrap() {
   console.log(`Uygulama '${await app.getUrl()}' adresinde çalışıyore.`);
   console.log(`Swagger '${await app.getUrl()}/api' adresinde çalışıyore.`);
 
-  await permissionService.syncApiRoutes(app);
+  await syncPermission(app);
 
 }
 
