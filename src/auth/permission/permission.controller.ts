@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { PermissionService } from './permission.service';
 import { PermissionDto } from '../dto/permission.dto';
+import { RoleDto } from '../dto/role.dto';
 
 @ApiBearerAuth()
 @Controller('permission')
@@ -10,18 +11,20 @@ export class PermissionController {
 
     @Get()
     async getPermissions(@Res() res) {
-        try { return res.status(200).send(await this.permissionService.getPermissions(res)) }
+        try { return res.status(200).send(await this.permissionService.getPermissions()) }
         catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
     @Post('get/:id')
     async getPermissionById(@Res() res, @Param('id') id: number) {
-        return await this.permissionService.getPermission(id, res);
+        try { return res.status(200).send(await this.permissionService.getPermission(id)) }
+        catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
     @Post('create/new')
     async create(@Body() data: PermissionDto, @Res() res) {
-        return await this.permissionService.create(data, res);
+        try { return res.status(200).send(await this.permissionService.create(data)) }
+        catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
     @Post('set/:id')
@@ -32,43 +35,50 @@ export class PermissionController {
 
     @Post('delete/:id')
     async deletePermission(@Param('id') id: number, @Res() res) {
-        try { return res.status(200).send(await this.permissionService.deletePermission(id, res)) }
+        try { return res.status(200).send(await this.permissionService.deletePermission(id)) }
         catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
     @Post('create/role')
     async createRole(@Body() data: RoleDto, @Res() res) {
-        return await this.permissionService.createRole(data, res);
+        try { return res.status(200).send(await this.permissionService.createRole(data)) }
+        catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
     @Get('roles')
     async getRoles(@Res() res) {
-        return await this.permissionService.getRoles(res);
+        try { return res.status(200).send(await this.permissionService.getRoles()) }
+        catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
     @Get('role/get/:id')
     async getRoleById(@Param('id') id: number, @Res() res) {
-        return await this.permissionService.getRole(id, res);
+        try { return res.status(200).send(await this.permissionService.getRole(id)) }
+        catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
     @Post('role/set/:id')
     async setRole(@Param('id') id: number, @Body() data: RoleDto, @Res() res) {
-        return await this.permissionService.setRole(id, data.name, res);
+        try { return res.status(200).send(await this.permissionService.setRole(id, data)) }
+        catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
     @Post('role/del/:id')
     async deleteRole(@Param('id') id: number, @Res() res) {
-        return await this.permissionService.deleteRole(id, res);
+        try { return res.status(200).send(await this.permissionService.deleteRole(id)) }
+        catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
-    @Get('functions')
+    @Get('apis')
     async getApis(@Res() res) {
-        return await this.permissionService.getApis(res);
+        try { return res.status(200).send(await this.permissionService.getApis()) }
+        catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
-    @Get('functions/:roleid')
+    @Get('api/:roleid')
     async getApisByRole(@Param('roleid') roleid: number, @Res() res) {
-        return await this.permissionService.getApisByRole(roleid, res);
+        try { return res.status(200).send(await this.permissionService.getApisByRole(roleid)) }
+        catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
 }

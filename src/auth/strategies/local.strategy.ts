@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { UserService } from 'src/user/user.service';
 import { Encryptor } from '../encryptor/encryptor';
-import { AuthErrorMessage } from '../constants/error.constant';
+import { ErrorMessage } from '../constants/error-message.constant';
 
 // Kullanıcı var mı yok mu ve girdiği bilgiler doğru mu diye kontrol eden guard -- login yapacak kullanıcıyı kontrol eder
 
@@ -25,10 +25,10 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
                 return result;
             }
             else {
-                throw new HttpException(AuthErrorMessage.WRONG_PASSWORD, 401)
+                throw new HttpException(ErrorMessage.Auth().WRONG_PASSWORD, 401)
             }
         }
-        throw new HttpException(AuthErrorMessage.USER_NOT_FOUND, 404)
+        throw new HttpException(ErrorMessage.Auth().USER_NOT_FOUND, 404)
     }
 }
 

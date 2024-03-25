@@ -2,9 +2,9 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/user/dto/user.dto';
 import { UserService } from '../user/user.service';
-import { AuthErrorMessage } from './constants/error.constant';
 import { jwtRefreshSignOptions, jwtSignOptions } from './constants/jwt.constant';
 import { Encryptor } from './encryptor/encryptor';
+import { ErrorMessage } from './constants/error-message.constant';
 
 @Injectable()
 export class AuthService {
@@ -25,13 +25,13 @@ export class AuthService {
         if (registered_user) {
             const login = await this.login(registered_user);
             const result = {
-                message: AuthErrorMessage.REGISTER_SUCCESS,
+                message: ErrorMessage.Auth().REGISTER_SUCCESS,
                 user: login.user,
                 access_token: login.tokens.accessToken
             }
             return result;
         }
-        return { message: AuthErrorMessage.REGISTER_FAIL }
+        return { message: ErrorMessage.Auth().REGISTER_FAIL }
     }
 
     async getTokens(email: string) {
