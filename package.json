@@ -24,8 +24,7 @@
     "gen-mig": "npm run typeorm -- -d ./db/data-source.ts migration:generate",
     "run-mig": "npm run typeorm migration:run -- -d ./db/data-source.ts",
     "create-mig": "npm run typeorm -- migration:create",
-    "revert-mig": "npm run typeorm -- -d ./db/data-source.ts migration:revert",
-    "check-api": "node ../../auth/auth.module.ts permission.service.ts createApiRoutes"
+    "revert-mig": "npm run typeorm -- -d ./db/data-source.ts migration:revert"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

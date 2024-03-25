@@ -12,7 +12,7 @@ export class PermissionService {
         private readonly permissionRepository: Repository<Permission>
     ) { }
 
-    async createApiRoutes(app: INestApplication) {
+    async syncApiRoutes(app: INestApplication) {
         const routes = JSON.parse(JSON.stringify(this.extractRoutes(app)));
         const apis = JSON.parse(JSON.stringify(await this.apiRepository.find()));
         const routesToCreate = routes.filter(route => !apis.some(api => this.compareRoutes(api, route)));
@@ -44,6 +44,9 @@ export class PermissionService {
             await this.apiRepository.save(routesToCreate);
         }
 
+        else {
+            console.log("++++++++++++ Veritabanı ve Uygulamadaki API'ler Güncel ++++++++++++")
+        }
     }
 
     private extractRoutes(app: INestApplication) {
