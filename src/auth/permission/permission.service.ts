@@ -21,7 +21,7 @@ export class PermissionService {
         private readonly roleRepository: Repository<Role>
     ) { }
 
-    async syncApiRoutes(app: INestApplication) {
+    async syncApiRoutes(app: INestApplication) {  // uygulamadaki apiler veritabanı ile senkronize edilir
         const routes = JSON.parse(JSON.stringify(this.extractRoutes(app)));
         const apis = JSON.parse(JSON.stringify(await this.apiRepository.find()));
         const routesToCreate = routes.filter(route => !apis.some(api => this.compareRoutes(api, route)));
@@ -58,23 +58,23 @@ export class PermissionService {
         }
     }
 
-    private extractRoutes(app: INestApplication) {
+    private extractRoutes(app: INestApplication) { // uygulamadaki apileri listeler
         const server = app.getHttpServer();
         const router = server._events.request._router;
 
         return router.stack
-            .filter(layer => layer.route && !layer.route.path.includes('swagger'))
+            .filter(layer => layer.route && !layer.route.path.includes('swagger')) // swagger apilerini almamak için
             .map(layer => ({
                 path: layer.route.path,
                 method: layer.route.stack[0].method
             }));
     }
 
-    private compareRoutes(route1: { path: string, method: string }, route2: { path: string, method: string }) {
+    private compareRoutes(route1: { path: string, method: string }, route2: { path: string, method: string }) { // iki apiyi karşılaştırır
         return route1.path === route2.path && route1.method === route2.method;
     }
 
-    async syncAdminPermissions() {
+    async syncSuperAdminPermissions() { // super admin yetkileri veritabanı ile senkronize edilir
         const role = await this.roleRepository.findOne({ where: { name: RolesConstant.SUPER_ADMIN } });
         if (!role) {
             await this.roleRepository.save({ name: RolesConstant.SUPER_ADMIN });
@@ -93,7 +93,7 @@ export class PermissionService {
         }
     }
 
-    async syncUserPermissions() {
+    async syncUserPermissions() { // user yetkilerini veritabanı ile senkronize edilir
         const role = await this.roleRepository.findOne({ where: { name: RolesConstant.USER } });
         if (!role) {
             await this.roleRepository.save({ name: RolesConstant.USER });
@@ -109,7 +109,7 @@ export class PermissionService {
         }
     }
 
-    async create(data: PermissionDto) {
+    async create(data: PermissionDto) { // yeni yetki oluşturur
         const checkexist = await this.permissionRepository.findOne({ where: { api_id: data.api_id, role_id: data.role_id } });
         if (checkexist) { throw new HttpException(ErrorMessage.Permission().ALREADY_EXIST, HttpStatus.BAD_REQUEST); }
 
@@ -121,33 +121,37 @@ export class PermissionService {
         return { message: ConfirmMessage.Permission().CREATED }
     }
 
-    async getPermissions() {
+    async getPermissions() { // yetkileri listeler
         const permissions = await this.roleRepository.find({ relations: { permission: { api: true } }, select: { permission: { id: true, api: { id: true, description: true, method: true, path: true } } } });
         if (permissions.length < 1) { throw new HttpException(ErrorMessage.Permission().NOT_FOUND, HttpStatus.NOT_FOUND) }
         return { permissions };
     }
 
-    async getPermission(permission_id: number) {
+    async getPermission(permission_id: number) { // id'ye göre yetkiyi getirir
         const perm = await this.permissionRepository.findOne({ where: { id: permission_id }, relations: { api: true, role: true } });
         if (!perm) { throw new HttpException(ErrorMessage.Permission().NOT_FOUND, HttpStatus.NOT_FOUND) }
         return { perm };
     }
 
-    async setPermission(permission_id: number, data: PermissionDto) {
+    async setPermission(permission_id: number, data: PermissionDto) { // yetkiyi günceller
+        const checkexist = await this.permissionRepository.findOne({ where: { id: permission_id } });
+        if (!checkexist) { throw new HttpException(ErrorMessage.Permission().NOT_FOUND, HttpStatus.NOT_FOUND); }
+        await this.validateRoleAndApi(data.role_id);
         const perm = await this.permissionRepository.update({ id: permission_id }, { api_id: data.api_id, role_id: data.role_id });
         if (perm.affected < 1) { throw new HttpException(ErrorMessage.Permission().NOT_UPDATED, HttpStatus.BAD_REQUEST); }
         return { message: ConfirmMessage.Permission().UPDATED };
     }
 
-    async deletePermission(permission_id: number) {
+    async deletePermission(permission_id: number) { // yetkiyi siler
         const checkexist = await this.permissionRepository.findOne({ where: { id: permission_id } });
         if (!checkexist) { throw new HttpException(ErrorMessage.Permission().NOT_FOUND, HttpStatus.NOT_FOUND); }
+        await this.validateRoleAndApi(checkexist.role_id);
         const perm = await this.permissionRepository.delete({ id: permission_id });
         if (perm.affected < 1) { throw new HttpException(ErrorMessage.Permission().NOT_DELETED, HttpStatus.BAD_REQUEST); }
         return { message: ConfirmMessage.Permission().DELETED }
     }
 
-    async createRole(data: RoleDto) {
+    async createRole(data: RoleDto) { // yeni rol oluşturur
         const checkexist = await this.roleRepository.findOne({ where: { name: data.name } });
         if (checkexist) throw new HttpException(ErrorMessage.Role().ALREADY_EXIST, HttpStatus.BAD_REQUEST);
         const role = this.roleRepository.create(data);
@@ -156,26 +160,26 @@ export class PermissionService {
         return { message: ConfirmMessage.Role().CREATED }
     }
 
-    async getRoles() {
+    async getRoles() { // rolleri listeler
         const roles = await this.roleRepository.find();
         if (roles.length < 1) throw new HttpException(ErrorMessage.Role().NOT_FOUND, HttpStatus.NOT_FOUND);
         return { roles };
     }
 
-    async getRole(role_id: number) {
+    async getRole(role_id: number) { // id'ye göre rol getirir
         const role = await this.roleRepository.findOne({ where: { id: role_id } });
         if (!role) throw new HttpException(ErrorMessage.Role().NOT_FOUND, HttpStatus.NOT_FOUND);
         return role;
     }
 
-    async setRole(roleid: number, data: RoleDto) {
+    async setRole(roleid: number, data: RoleDto) { // rolü günceller
         const { role } = await this.validateRoleAndApi(roleid);
         const update = await this.roleRepository.update(role, data);
         if (update.affected < 1) throw new HttpException(ErrorMessage.Role().NOT_UPDATED, HttpStatus.BAD_REQUEST);
         return { message: ConfirmMessage.Role().UPDATED };
     }
 
-    async deleteRole(roleid: number) {
+    async deleteRole(roleid: number) { // rolü siler
         const { role } = await this.validateRoleAndApi(roleid);
         const checkPermission = await this.permissionRepository.findOne({ where: { role_id: roleid } });
         if (checkPermission) throw new HttpException(ErrorMessage.Role().HAS_PERMISSION, HttpStatus.BAD_REQUEST);
@@ -184,7 +188,7 @@ export class PermissionService {
         return { message: ConfirmMessage.Role().DELETED };
     }
 
-    async validateRoleAndApi(role_id?: number, api_id?: number) {
+    async validateRoleAndApi(role_id?: number, api_id?: number) { // rol ve api doğrulaması yapar
         let result: { role?: Role, api?: Api } = {};
         if (role_id) {
             const role = await this.roleRepository.findOne({ where: { id: role_id } });
@@ -202,13 +206,13 @@ export class PermissionService {
         return result;
     }
 
-    async getApis() {
+    async getApis() { // apileri listeler
         const apis = await this.apiRepository.find();
         if (apis.length < 1) throw new HttpException(ErrorMessage.Role().NOT_FOUND, HttpStatus.NOT_FOUND);
         return { apis };
     }
 
-    async getApisByRole(roleid: number) {
+    async getApisByRole(roleid: number) { // role göre apileri listeler
         const apis = await this.permissionRepository.find({ where: { role_id: roleid }, relations: { api: true, role: true }, select: ['api'] });
         if (apis.length < 1) throw new HttpException(ErrorMessage.Role().NOT_FOUND, HttpStatus.NOT_FOUND);
         const api = [];
@@ -217,7 +221,7 @@ export class PermissionService {
         return { role, api };
     }
 
-    async setApiDescription(api_id: number, description: string) {
+    async setApiDescription(api_id: number, description: string) { // api açıklamasını günceller
         const api = await this.apiRepository.findOne({ where: { id: api_id } });
         if (!api) throw new HttpException(ErrorMessage.Permission().API_NOT_EXIST, HttpStatus.NOT_FOUND);
         const update = await this.apiRepository.update({ id: api_id }, { description });
@@ -230,6 +234,6 @@ export class PermissionService {
 export async function syncPermission(app: INestApplication) {
     const permissionService = app.get<PermissionService>(PermissionService);
     await permissionService.syncApiRoutes(app);
-    await permissionService.syncAdminPermissions();
+    await permissionService.syncSuperAdminPermissions();
     await permissionService.syncUserPermissions();
 }

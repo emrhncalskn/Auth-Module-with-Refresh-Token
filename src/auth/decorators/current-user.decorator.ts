@@ -9,6 +9,8 @@ export const CurrentUser = (userKey?: any) => GetUserID(userKey, GetUserPipe);
 
 /*
 
+ => Dekoratör üzerinden header'dan gelen token'dan kullanıcı bilgilerini almak için kullanılır.
+
 Kullanımı:
 
 @Get('test')
@@ -32,10 +34,6 @@ async test2(@CurrentUser('id') user_id:number) {
     return user;
 }
 
-Çıktı
-    {
-        "id": 1
-    }
-}
+Çıktı: 1
 
 */

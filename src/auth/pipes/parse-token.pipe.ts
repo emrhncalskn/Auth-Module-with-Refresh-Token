@@ -12,3 +12,5 @@ export class GetUserPipe implements PipeTransform {
         return user[`${key.data}`] || user;
     }
 }
+
+// Token'dan gelen kullanıcı bilgileri işlenir ve geri döndürülür.
