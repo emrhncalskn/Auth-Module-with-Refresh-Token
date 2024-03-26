@@ -17,12 +17,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { PermissionController } from './permission/permission.controller';
+import { GetUserPipe } from './pipes/parse-token.pipe';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Api, Permission, Role]), UserModule, PassportModule, JwtModule.register({})],
   controllers: [AuthController, PermissionController],
   providers: [
-    AuthService, JwtService, PermissionService, LocalStrategy, JwtStrategy, RefreshTokenStrategy, Encryptor,
+    AuthService, JwtService, PermissionService, LocalStrategy, JwtStrategy, RefreshTokenStrategy, Encryptor, GetUserPipe,
     { provide: APP_GUARD, useClass: JwtAuthGuard }, { provide: APP_GUARD, useClass: PermissionGuard }
   ],
   exports: [PermissionService]

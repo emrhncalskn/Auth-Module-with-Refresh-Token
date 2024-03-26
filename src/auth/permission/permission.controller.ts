@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Response } from 'express';
 import { ApiDto, PermissionDto } from '../dto/permission.dto';
 import { RoleDto } from '../dto/role.dto';
 import { PermissionService } from './permission.service';
-import { Response } from 'express';
 
 @ApiBearerAuth()
 @Controller('permission')

@@ -8,6 +8,8 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { PassPermission } from './decorators/pass-permission.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { ICurrentUser } from './interfaces/current-user.interface';
 
 @PassAuth()
 @PassPermission()
@@ -17,8 +19,8 @@ export class AuthController {
 
     @UseGuards(LocalAuthGuard)
     @Post('login')
-    async login(@Req() req, @Res() res, @Body() user: AuthDto) {
-        try { return res.status(200).send(await this.authService.login(req.user)) }
+    async login(@CurrentUser() user: ICurrentUser, @Res() res, @Body() auth_data: AuthDto) {
+        try { return res.status(200).send(await this.authService.login(user)) }
         catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
