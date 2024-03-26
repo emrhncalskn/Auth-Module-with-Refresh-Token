@@ -7,6 +7,7 @@ import { AuthDto } from './dto/auth.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { PassPermission } from './decorators/pass-permission.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @PassAuth()
 @PassPermission()
@@ -27,6 +28,7 @@ export class AuthController {
         catch (error) { return res.status(400).send({ msg: error.message }) }
     }
 
+    @ApiBearerAuth()
     @UseGuards(RefreshTokenGuard)
     @Get('refresh')
     async refreshTokens(@Req() req: Request) {

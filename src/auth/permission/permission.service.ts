@@ -63,7 +63,7 @@ export class PermissionService {
         const router = server._events.request._router;
 
         return router.stack
-            .filter(layer => layer.route && !layer.route.path.includes('api'))
+            .filter(layer => layer.route && !layer.route.path.includes('swagger'))
             .map(layer => ({
                 path: layer.route.path,
                 method: layer.route.stack[0].method
@@ -112,6 +112,9 @@ export class PermissionService {
     async create(data: PermissionDto) {
         const checkexist = await this.permissionRepository.findOne({ where: { api_id: data.api_id, role_id: data.role_id } });
         if (checkexist) { throw new HttpException(ErrorMessage.Permission().ALREADY_EXIST, HttpStatus.BAD_REQUEST); }
+
+        await this.validateRoleAndApi(data.role_id, data.api_id);
+
         const perm = await this.permissionRepository.create(data);
         const newPerm = await this.permissionRepository.save(perm);
         if (!newPerm) { throw new HttpException(ErrorMessage.Permission().NOT_CREATED, HttpStatus.BAD_REQUEST) }
@@ -119,32 +122,34 @@ export class PermissionService {
     }
 
     async getPermissions() {
-        const perms = await this.permissionRepository.find({ relations: { api: true, role: true } });
-        if (perms.length < 1) { throw new HttpException(ErrorMessage.Permission().NOT_FOUND, HttpStatus.NOT_FOUND) }
-        return { perms };
+        const permissions = await this.roleRepository.find({ relations: { permission: { api: true } }, select: { permission: { id: true, api: { id: true, description: true, method: true, path: true } } } });
+        if (permissions.length < 1) { throw new HttpException(ErrorMessage.Permission().NOT_FOUND, HttpStatus.NOT_FOUND) }
+        return { permissions };
     }
 
-    async getPermission(permid: number) {
-        const perm = await this.permissionRepository.findOne({ where: { id: permid }, relations: { api: true, role: true } });
+    async getPermission(permission_id: number) {
+        const perm = await this.permissionRepository.findOne({ where: { id: permission_id }, relations: { api: true, role: true } });
         if (!perm) { throw new HttpException(ErrorMessage.Permission().NOT_FOUND, HttpStatus.NOT_FOUND) }
         return { perm };
     }
 
-    async setPermission(permid: number, data: PermissionDto) {
-        const perm = await this.permissionRepository.update({ id: permid }, { api_id: data.api_id, role_id: data.role_id });
+    async setPermission(permission_id: number, data: PermissionDto) {
+        const perm = await this.permissionRepository.update({ id: permission_id }, { api_id: data.api_id, role_id: data.role_id });
         if (perm.affected < 1) { throw new HttpException(ErrorMessage.Permission().NOT_UPDATED, HttpStatus.BAD_REQUEST); }
         return { message: ConfirmMessage.Permission().UPDATED };
     }
 
-    async deletePermission(permid: number) {
-        const checkexist = await this.permissionRepository.findOne({ where: { id: permid } });
+    async deletePermission(permission_id: number) {
+        const checkexist = await this.permissionRepository.findOne({ where: { id: permission_id } });
         if (!checkexist) { throw new HttpException(ErrorMessage.Permission().NOT_FOUND, HttpStatus.NOT_FOUND); }
-        const perm = await this.permissionRepository.delete({ id: permid });
+        const perm = await this.permissionRepository.delete({ id: permission_id });
         if (perm.affected < 1) { throw new HttpException(ErrorMessage.Permission().NOT_DELETED, HttpStatus.BAD_REQUEST); }
         return { message: ConfirmMessage.Permission().DELETED }
     }
 
     async createRole(data: RoleDto) {
+        const checkexist = await this.roleRepository.findOne({ where: { name: data.name } });
+        if (checkexist) throw new HttpException(ErrorMessage.Role().ALREADY_EXIST, HttpStatus.BAD_REQUEST);
         const role = this.roleRepository.create(data);
         const newRole = await this.roleRepository.save(role);
         if (!newRole) throw new HttpException(ErrorMessage.Role().NOT_CREATED, HttpStatus.BAD_REQUEST);
@@ -164,23 +169,43 @@ export class PermissionService {
     }
 
     async setRole(roleid: number, data: RoleDto) {
-        const role = await this.roleRepository.update({ id: roleid }, { name: data.name });
-        if (role.affected < 1) throw new HttpException(ErrorMessage.Role().NOT_UPDATED, HttpStatus.BAD_REQUEST);
+        const { role } = await this.validateRoleAndApi(roleid);
+        const update = await this.roleRepository.update(role, data);
+        if (update.affected < 1) throw new HttpException(ErrorMessage.Role().NOT_UPDATED, HttpStatus.BAD_REQUEST);
         return { message: ConfirmMessage.Role().UPDATED };
     }
 
     async deleteRole(roleid: number) {
-        const role = await this.roleRepository.delete({ id: roleid });
-        if (role.affected < 1) throw new HttpException(ErrorMessage.Role().NOT_DELETED, HttpStatus.BAD_REQUEST);
+        const { role } = await this.validateRoleAndApi(roleid);
+        const checkPermission = await this.permissionRepository.findOne({ where: { role_id: roleid } });
+        if (checkPermission) throw new HttpException(ErrorMessage.Role().HAS_PERMISSION, HttpStatus.BAD_REQUEST);
+        const delete_role = await this.roleRepository.delete(role);
+        if (delete_role.affected < 1) throw new HttpException(ErrorMessage.Role().NOT_DELETED, HttpStatus.BAD_REQUEST);
         return { message: ConfirmMessage.Role().DELETED };
     }
 
+    async validateRoleAndApi(role_id?: number, api_id?: number) {
+        let result: { role?: Role, api?: Api } = {};
+        if (role_id) {
+            const role = await this.roleRepository.findOne({ where: { id: role_id } });
+            if (!role) throw new HttpException(ErrorMessage.Role().NOT_FOUND, HttpStatus.NOT_FOUND);
+            if (role.name === RolesConstant.SUPER_ADMIN || role.name === RolesConstant.USER) {
+                throw new HttpException(ErrorMessage.Role().CANT_BE_CHANGE, HttpStatus.BAD_REQUEST);
+            }
+            result.role = role;
+        }
+        if (api_id) {
+            const api = await this.apiRepository.findOne({ where: { id: api_id } });
+            if (!api) throw new HttpException(ErrorMessage.Permission().API_NOT_EXIST, HttpStatus.NOT_FOUND);
+            result.api = api;
+        }
+        return result;
+    }
+
     async getApis() {
-        const apis = await this.permissionRepository.find({ relations: { api: true } });
+        const apis = await this.apiRepository.find();
         if (apis.length < 1) throw new HttpException(ErrorMessage.Role().NOT_FOUND, HttpStatus.NOT_FOUND);
-        const api = [];
-        apis.forEach(element => { !api.includes(element.api) ? api.push(element.api) : null });
-        return { api };
+        return { apis };
     }
 
     async getApisByRole(roleid: number) {
@@ -190,6 +215,14 @@ export class PermissionService {
         apis.forEach(element => { !api.includes(element.api) ? api.push(element.api) : null });
         const role = apis[0].role;
         return { role, api };
+    }
+
+    async setApiDescription(api_id: number, description: string) {
+        const api = await this.apiRepository.findOne({ where: { id: api_id } });
+        if (!api) throw new HttpException(ErrorMessage.Permission().API_NOT_EXIST, HttpStatus.NOT_FOUND);
+        const update = await this.apiRepository.update({ id: api_id }, { description });
+        if (update.affected < 1) throw new HttpException(ErrorMessage.Permission().NOT_UPDATED, HttpStatus.BAD_REQUEST);
+        return { message: ConfirmMessage.Permission().UPDATED };
     }
 
 }

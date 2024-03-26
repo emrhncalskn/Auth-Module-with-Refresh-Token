@@ -38,6 +38,9 @@ export class ErrorMessage {
             NOT_CREATED: 'Rol oluşturulamadı',
             NOT_UPDATED: 'Rol güncellenemedi',
             NOT_DELETED: 'Rol silinemedi',
+            HAS_PERMISSION: 'Bu role ait yetkiler var',
+            CANT_BE_CHANGE: 'Bu rol değiştirilemez!',
+            ALREADY_EXIST: 'Bu rol zaten mevcut',
         }
     }
 }

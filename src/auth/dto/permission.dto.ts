@@ -6,3 +6,8 @@ export class PermissionDto {
     @ApiProperty()
     api_id: number;
 }
+
+export class ApiDto {
+    @ApiProperty()
+    description: string;
+}

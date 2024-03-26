@@ -7,7 +7,6 @@ import { PermissionService, syncPermission } from './auth/permission/permission.
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const permissionService = app.get<PermissionService>(PermissionService);
 
   dotenv.config();
 
@@ -20,12 +19,12 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('swagger/api', app, document);
   await app.listen(process.env.PORT || 3000);
 
 
   console.log(`Uygulama '${await app.getUrl()}' adresinde çalışıyore.`);
-  console.log(`Swagger '${await app.getUrl()}/api' adresinde çalışıyore.`);
+  console.log(`Swagger '${await app.getUrl()}/swagger/api' adresinde çalışıyore.`);
 
   await syncPermission(app);
 
