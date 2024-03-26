@@ -1,6 +1,6 @@
 import { JwtModuleOptions, JwtSignOptions } from "@nestjs/jwt";
 
-const expireTime = '30s';
+const expireTime = '60s';
 const refreshTokenExpireTime = '12d';
 
 export const jwtModuleOptions: JwtModuleOptions = { secret: process.env.JWT_SECRET, signOptions: { expiresIn: expireTime, algorithm: 'HS256' } };
